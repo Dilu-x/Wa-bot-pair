@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shitsu MD | Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.07);
+      --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+      --glass-blur: blur(30px) saturate(150%);
+      
+      --accent-indigo: #818cf8;
+      --indigo-glow: rgba(129, 140, 248, 0.25);
+      --accent-cyan: #22d3ee;
+      --cyan-glow: rgba(34, 211, 238, 0.3);
+      --accent-rose: #fb7185;
+      --rose-glow: rgba(251, 113, 133, 0.3);
+      
+      --text-primary: rgba(255, 255, 255, 0.95);
+      --text-secondary: rgba(255, 255, 255, 0.5);
+      --text-dim: rgba(255, 255, 255, 0.25);
+      
+      --radius-lg: 28px;
+      --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+      color: var(--text-primary);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Ambient Background ── */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 70% 50% at 50% 40%, black 20%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 40%, black 20%, transparent 100%);
+    }
+
+    .ambient-glow {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: 
+        radial-gradient(circle at 10% 90%, rgba(129, 140, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, rgba(34, 211, 238, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(251, 113, 133, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* ── Glass System ── */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.05);
+      position: relative;
+    }
+
+    .glass::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── Floating Top Bar ── */
+    .header {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: calc(100% - 40px);
+      max-width: 900px;
+      border-radius: 50px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-img {
+      height: 36px;
+      width: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+
+    .logo-text {
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff, rgba(255,255,255,0.6));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .battery-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .battery-icon {
+      color: var(--accent-cyan);
+      font-size: 1.1rem;
+      filter: drop-shadow(0 0 6px var(--cyan-glow));
+    }
+
+    /* ── Main Layout ── */
+    .app-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3rem;
+      padding: 100px 24px 40px;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── Center: Pairing Box ── */
+    .pair-card {
+      flex: 1;
+      max-width: 500px;
+      border-radius: var(--radius-lg);
+      padding: 48px 36px;
+      text-align: center;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .pair-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(129, 140, 248, 0.15);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 40px var(--indigo-glow);
+    }
+
+    .pair-card h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .pair-card h5 {
+      color: var(--text-dim);
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .input-container input {
+      flex: 1;
+      padding: 16px 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .input-container input::placeholder { color: var(--text-dim); }
+
+    .input-container input:focus {
+      outline: none;
+      border-color: var(--accent-indigo);
+      background: rgba(255,255,255,0.05);
+      box-shadow: 0 0 0 3px var(--indigo-glow);
+    }
+
+    .input-container button {
+      padding: 16px 28px;
+      background: rgba(129, 140, 248, 0.12);
+      color: var(--accent-indigo);
+      border: 1px solid rgba(129, 140, 248, 0.2);
+      border-radius: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .input-container button:hover {
+      background: rgba(129, 140, 248, 0.25);
+      box-shadow: 0 0 20px var(--indigo-glow);
+      transform: translateY(-2px);
+    }
+
+    #pair-result {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(255,255,255,0.08);
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      transition: var(--transition);
+    }
+
+    #copy-code {
+      background: rgba(34, 211, 238, 0.08);
+      border: 1px solid rgba(34, 211, 238, 0.15);
+      padding: 14px 28px;
+      border-radius: 50px;
+      color: var(--accent-cyan);
+      cursor: pointer;
+      font-weight: 700;
+      transition: var(--transition);
+      margin-top: 24px;
+      display: none;
+      font-family: inherit;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    #copy-code:hover {
+      background: rgba(34, 211, 238, 0.2);
+      box-shadow: 0 0 20px var(--cyan-glow);
+      transform: translateY(-2px);
+    }
+
+    /* ── Side: Round Music Player ── */
+    .music-player-round {
+      width: 320px;
+      min-height: 320px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .music-player-round:hover {
+      transform: translateY(-4px) scale(1.02);
+      border-color: rgba(251, 113, 133, 0.15);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 50px var(--rose-glow);
+    }
+
+    /* SVG Circular Progress */
+    .progress-ring {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .progress-ring-bg {
+      fill: transparent;
+      stroke: rgba(255,255,255,0.04);
+      stroke-width: 3;
+    }
+
+    .progress-ring-fill {
+      fill: transparent;
+      stroke: url(#gradient-ring);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 990;
+      stroke-dashoffset: 990;
+      transition: stroke-dashoffset 0.3s ease;
+    }
+
+    .player-content {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 65%;
+      text-align: center;
+    }
+
+    .album-art {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+
+    .music-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .music-subtitle {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .play-btn-round {
+      background: linear-gradient(135deg, var(--accent-rose), var(--accent-indigo));
+      border: none;
+      border-radius: 50%;
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 4px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(251, 113, 133, 0.3);
+      transition: var(--transition);
+    }
+
+    .play-btn-round:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 30px rgba(251, 113, 133, 0.5);
+    }
+
+    .play-btn-round i {
+      color: #fff;
+      font-size: 1.2rem;
+    }
+
+    .time-display {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Visualizer at bottom of circle */
+    .visualizer-round {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      height: 25px;
+      gap: 2px;
+      margin-top: 4px;
+    }
+
+    .bar {
+      width: 3px;
+      background: linear-gradient(to top, var(--accent-rose), var(--accent-indigo));
+      border-radius: 3px;
+      transition: height 0.15s ease;
+      opacity: 0.8;
+    }
+
+    /* ── Loading animation ── */
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .app-container {
+        flex-direction: column;
+        gap: 3rem;
+        padding-top: 90px;
+      }
+      .pair-card {
+        max-width: 100%;
+        padding: 36px 24px;
+      }
+      .music-player-round {
+        width: 260px;
+        min-height: 260px;
+        order: -1; /* Move to top on mobile */
+      }
+    }
+
+    @media (max-width: 480px) {
+      .pair-card h2 { font-size: 1.8rem; }
+      .input-container { flex-direction: column; }
+      .input-container button { width: 100%; }
+      .header { padding: 10px 18px; }
+      .logo-text { font-size: 1rem; }
+      .music-player-round { width: 220px; min-height: 220px; }
+      .album-art { width: 60px; height: 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Background -->
+  <div class="bg-grid"></div>
+  <div class="ambient-glow"></div>
+
+  <!-- Floating Top Bar -->
+  <header class="header">
+    <div class="logo-container">
+      <img src="https://shyra.edgeone.app/bot-img.jpg" alt="Shitsu MD Logo" class="logo-img">
+      <div class="logo-text">SHITSU MD</div>
+    </div>
+    <div class="battery-container">
+      <i class="fas fa-battery-full battery-icon" id="battery-icon"></i>
+      <span id="battery-level">--%</span>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <div class="app-container">
+    
+    <!-- Center: Pairing Box -->
+    <div class="pair-card glass">
+      <h2>Session Pairing</h2>
+      <h5>Shitsu MD System</h5>
+      
+      <div class="input-container">
+        <input type="number" id="number" placeholder="Enter WhatsApp number" required>
+        <button id="submit">Get Code</button>
+      </div>
+      
+      <div id="pair-result">
+        <p id="waiting-message" style="display: none; color: var(--text-secondary); font-size: 1rem; letter-spacing: 0;" class="loading-dots">Processing request</p>
+      </div>
+      
+      <button id="copy-code" onclick="copyCode()">Copy Code</button>
+    </div>
+
+    <!-- Side: Round Music Player -->
+    <div class="music-player-round glass">
+      <!-- SVG Circular Progress -->
+      <svg class="progress-ring" viewBox="0 0 320 320">
+        <defs>
+          <linearGradient id="gradient-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="var(--accent-rose)" />
+            <stop offset="100%" stop-color="var(--accent-indigo)" />
+          </linearGradient>
+        </defs>
+        <circle class="progress-ring-bg" cx="160" cy="160" r="155"></circle>
+        <circle id="prog-circle" class="progress-ring-fill" cx="160" cy="160" r="155"></circle>
+      </svg>
+
+      <div class="player-content">
+        <img src="https://shyra.edgeone.app/bot-img.jpg" alt="Album Art" class="album-art">
+        <div class="music-title">Shitsu MD Theme</div>
+        <div class="music-subtitle">Premium Sound</div>
+        <button class="play-btn-round" onclick="togglePlay()">
+          <i class="fas fa-pause" id="play-icon"></i>
+        </button>
+        <div class="time-display" id="time1">0:00</div>
+        <div class="visualizer-round" id="visualizer"></div>
+      </div>
+
+      <audio id="audio1" src="https://files.catbox.moe/svi5pb.mp3" loop></audio>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
+  <script>
+    // DOM Elements
+    const pairResult = document.getElementById("pair-result");
+    const submitBtn = document.getElementById("submit");
+    const numberInput = document.getElementById("number");
+    const copyCodeBtn = document.getElementById("copy-code");
+    const waitingMessage = document.getElementById("waiting-message");
+    const batteryLevel = document.getElementById("battery-level");
+    const batteryIcon = document.getElementById("battery-icon");
+
+    // Copy code function
+    async function copyCode() {
+      const codeText = pairResult.innerText;
+      try {
+        await navigator.clipboard.writeText(codeText);
+        copyCodeBtn.innerText = "Copied!";
+        copyCodeBtn.style.background = "rgba(52, 211, 153, 0.12)";
+        copyCodeBtn.style.color = "#34d399";
+        copyCodeBtn.style.borderColor = "rgba(52, 211, 153, 0.2)";
+        
+        setTimeout(() => {
+          copyCodeBtn.innerText = "Copy Code";
+          copyCodeBtn.style.background = "";
+          copyCodeBtn.style.color = "";
+          copyCodeBtn.style.borderColor = "";
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+      }
+    }
+
+    // Submit handler
+    submitBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      
+      if (!numberInput.value) {
+        pairResult.innerHTML = '<p style="color:var(--accent-rose); font-weight:600; font-size:0.95rem;">Please enter a number</p>';
+        return;
+      }
+      
+      const cleanNumber = numberInput.value.replace(/[^0-9]/g, "");
+      
+      if (cleanNumber.length < 11) {
+        pairResult.innerHTML = '<p style="color:var(--accent-rose); font-weight:600; font-size:0.95rem;">Invalid number format</p>';
+        return;
+      }
+      
+      let formattedNumber = "";
+      const digits = cleanNumber.split('');
+      digits.forEach((digit, index) => {
+        formattedNumber += digit;
+        if (index === 2 || index === 7) formattedNumber += " ";
+      });
+      
+      numberInput.type = "text";
+      numberInput.value = "+" + formattedNumber;
+      numberInput.style.color = "var(--accent-cyan)";
+      numberInput.style.letterSpacing = "0.5px";
+      
+      pairResult.innerHTML = '<p id="waiting-message" style="color: var(--text-secondary); font-size: 1rem; letter-spacing: 0;" class="loading-dots">Processing request</p>';
+      copyCodeBtn.style.display = "none";
+      
+      try {
+        setTimeout(async () => {
+          try {
+            const { data } = await axios(`/code?number=${cleanNumber}`);
+            const code = data.code || "UNAVAILABLE";
+            
+            pairResult.innerHTML = `<span style="color:var(--accent-cyan); text-shadow: 0 0 20px var(--cyan-glow);">${code}</span>`;
+            copyCodeBtn.style.display = "inline-block";
+            
+          } catch (error) {
+            pairResult.innerHTML = '<p style="color:var(--accent-rose); font-weight:600; font-size:0.95rem;">Error retrieving code</p>';
+          }
+        }, 2000);
+      } catch (error) {
+        pairResult.innerHTML = '<p style="color:var(--accent-rose); font-weight:600; font-size:0.95rem;">Network Error</p>';
+      }
+    });
+
+    // Music Player Logic
+    const audio = document.getElementById('audio1');
+    const playIcon = document.getElementById('play-icon');
+    const timeDisplay = document.getElementById('time1');
+    const progCircle = document.getElementById('prog-circle');
+    const visualizer = document.getElementById('visualizer');
+
+    // Circular progress setup
+    const radius = 155;
+    const circumference = 2 * Math.PI * radius;
+    progCircle.style.strokeDasharray = circumference;
+    progCircle.style.strokeDashoffset = circumference;
+
+    function setProgress(percent) {
+      const offset = circumference - (percent / 100) * circumference;
+      progCircle.style.strokeDashoffset = offset;
+    }
+
+    // Create visualizer bars
+    for (let i = 0; i < 24; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.height = `${Math.random() * 15 + 3}px`;
+      visualizer.appendChild(bar);
+    }
+
+    const bars = document.querySelectorAll('.bar');
+
+    document.addEventListener('click', function initAudio() {
+      audio.play().then(() => {
+        playIcon.classList.replace('fa-play', 'fa-pause');
+        updateTimeDisplay();
+        animateVisualizer();
+      }).catch(error => console.log('Auto-play prevented:', error));
+      document.removeEventListener('click', initAudio);
+    }, { once: true });
+
+    function togglePlay() {
+      if (audio.paused) {
+        audio.play();
+        playIcon.classList.replace('fa-play', 'fa-pause');
+        animateVisualizer();
+      } else {
+        audio.pause();
+        playIcon.classList.replace('fa-pause', 'fa-play');
+        bars.forEach(bar => bar.style.height = '3px');
+      }
+    }
+
+    function updateTimeDisplay() {
+      const minutes = Math.floor(audio.currentTime / 60);
+      const seconds = Math.floor(audio.currentTime % 60);
+      timeDisplay.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+      
+      if (audio.duration) {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        setProgress(progress);
+      }
+      
+      if (!audio.paused) requestAnimationFrame(updateTimeDisplay);
+    }
+
+    function animateVisualizer() {
+      if (!audio.paused) {
+        bars.forEach(bar => {
+          bar.style.height = `${Math.random() * 20 + 4}px`;
+        });
+        requestAnimationFrame(animateVisualizer);
+      }
+    }
+
+    audio.addEventListener('timeupdate', updateTimeDisplay);
+
+    // Battery Logic
+    async function updateBattery() {
+      if (navigator.getBattery) {
+        try {
+          const battery = await navigator.getBattery();
+          
+          const updateBatteryUI = () => {
+            const batteryPercent = Math.round(battery.level * 100);
+            batteryLevel.textContent = `${batteryPercent}%`;
+            
+            let iconClass = 'fa-battery-empty';
+            if (batteryPercent > 80) iconClass = 'fa-battery-full';
+            else if (batteryPercent > 60) iconClass = 'fa-battery-three-quarters';
+            else if (batteryPercent > 40) iconClass = 'fa-battery-half';
+            else if (batteryPercent > 20) iconClass = 'fa-battery-quarter';
+            
+            if (battery.charging) {
+              batteryIcon.className = `fas fa-bolt`;
+              batteryIcon.style.color = '#34d399';
+              batteryIcon.style.filter = 'drop-shadow(0 0 8px rgba(52,211,153,0.5))';
+            } else {
+              batteryIcon.className = `fas ${iconClass}`;
+              batteryIcon.style.color = 'var(--accent-cyan)';
+              batteryIcon.style.filter = 'drop-shadow(0 0 5px var(--cyan-glow))';
+            }
+          };
+          
+          battery.addEventListener('levelchange', updateBatteryUI);
+          battery.addEventListener('chargingchange', updateBatteryUI);
+          updateBatteryUI();
+        } catch (error) {
+          console.error('Battery API error:', error);
+        }
+      } else {
+        batteryLevel.textContent = "N/A";
+      }
+    }
+
+    // Initialize
+    window.addEventListener('load', () => {
+      copyCodeBtn.style.display = "none";
+      updateBattery();
+      
+      document.body.style.opacity = '0';
+      document.body.style.transform = 'translateY(20px)';
+      setTimeout(() => {
+        document.body.style.transition = 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+        document.body.style.opacity = '1';
+        document.body.style.transform = 'translateY(0)';
+      }, 100);
+    });
+  </script>
+</body>
+</html>

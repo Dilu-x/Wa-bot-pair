@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Shitsu MD | Wa Bot</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #000000;
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+      --glass-blur: blur(24px) saturate(150%);
+      
+      --neo-indigo: #818cf8;
+      --indigo-glow: rgba(129, 140, 248, 0.25);
+      --neo-cyan: #22d3ee;
+      --cyan-glow: rgba(34, 211, 238, 0.25);
+      --neo-rose: #fb7185;
+      --rose-glow: rgba(251, 113, 133, 0.25);
+      
+      --text-primary: rgba(255, 255, 255, 0.95);
+      --text-secondary: rgba(255, 255, 255, 0.5);
+      --text-dim: rgba(255, 255, 255, 0.25);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Neo Grid Background ── */
+    .neo-grid {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 20%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 20%, transparent 100%);
+    }
+
+    /* ── Ambient Glow ── */
+    .ambient-glow {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(129, 140, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(34, 211, 238, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(251, 113, 133, 0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* ── Glass System ── */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Glossy highlight on glass */
+    .glass::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      pointer-events: none;
+    }
+
+    /* ── Floating Top Bar ── */
+    .top-bar {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-radius: 50px;
+      max-width: 90vw;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .top-bar .brand {
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      color: var(--text-primary);
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--neo-cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--cyan-glow); }
+      50% { opacity: 0.6; box-shadow: 0 0 4px var(--cyan-glow); }
+    }
+
+    .divider-v {
+      width: 1px; height: 20px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .marquee-wrap {
+      overflow: hidden;
+      mask-image: linear-gradient(90deg, transparent, black 15%, black 85%, transparent);
+      -webkit-mask-image: linear-gradient(90deg, transparent, black 15%, black 85%, transparent);
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 32px;
+      animation: marquee 30s linear infinite;
+      width: max-content;
+    }
+
+    .marquee-track span {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .marquee-track span em {
+      font-style: normal;
+      color: var(--neo-indigo);
+    }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ── Container ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 110px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+      position: relative;
+    }
+
+    /* ── Profile ── */
+    .profile-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .avatar-container {
+      position: relative;
+      width: 110px; height: 110px;
+    }
+
+    .avatar-ring {
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: conic-gradient(var(--neo-indigo), var(--neo-cyan), var(--neo-rose), var(--neo-indigo));
+      animation: ringRotate 8s linear infinite;
+    }
+
+    .avatar-ring::after {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border-radius: 50%;
+      background: var(--bg);
+    }
+
+    .avatar-img {
+      position: relative;
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--bg);
+      z-index: 1;
+    }
+
+    @keyframes ringRotate { to { transform: rotate(360deg); } }
+
+    .profile-name {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #fff, rgba(255,255,255,0.6));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .profile-tag {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 64px 48px;
+      max-width: 800px;
+      width: 100%;
+      animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 900;
+      letter-spacing: -2.5px;
+      line-height: 1.05;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, var(--neo-indigo), var(--neo-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      max-width: 480px;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+
+    /* ── Stats ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+
+    .stat-card {
+      padding: 24px 16px;
+      text-align: center;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .stat-number {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 4px;
+    }
+
+    .stat-card:nth-child(1) .stat-number { color: var(--neo-indigo); text-shadow: 0 0 20px var(--indigo-glow); }
+    .stat-card:nth-child(2) .stat-number { color: var(--neo-cyan); text-shadow: 0 0 20px var(--cyan-glow); }
+    .stat-card:nth-child(3) .stat-number { color: var(--neo-rose); text-shadow: 0 0 20px var(--rose-glow); }
+    .stat-card:nth-child(4) .stat-number { color: #fbbf24; text-shadow: 0 0 20px rgba(251,191,36,0.25); }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 600;
+    }
+
+    /* ── Features ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 100%;
+    }
+
+    .feature-card {
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Neo Glow Hover Edge */
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 20%; right: 20%;
+      height: 1px;
+      background: transparent;
+      transition: all 0.4s ease;
+      filter: blur(1px);
+    }
+
+    .feature-card:nth-child(1):hover::after { background: var(--neo-indigo); box-shadow: 0 0 15px var(--indigo-glow); left: 5%; right: 5%; }
+    .feature-card:nth-child(2):hover::after { background: var(--neo-cyan); box-shadow: 0 0 15px var(--cyan-glow); left: 5%; right: 5%; }
+    .feature-card:nth-child(3):hover::after { background: var(--neo-rose); box-shadow: 0 0 15px var(--rose-glow); left: 5%; right: 5%; }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .feature-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:nth-child(1) .feature-icon { color: var(--neo-indigo); }
+    .feature-card:nth-child(2) .feature-icon { color: var(--neo-cyan); }
+    .feature-card:nth-child(3) .feature-icon { color: var(--neo-rose); }
+
+    .feature-card:hover .feature-icon {
+      transform: scale(1.05);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .feature-card h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      flex-grow: 1;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-indigo {
+      background: rgba(129, 140, 248, 0.1);
+      color: var(--neo-indigo);
+      border-color: rgba(129, 140, 248, 0.2);
+    }
+    .btn-indigo:hover {
+      background: rgba(129, 140, 248, 0.2);
+      box-shadow: 0 0 20px var(--indigo-glow), inset 0 0 20px rgba(129, 140, 248, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .btn-cyan {
+      background: rgba(34, 211, 238, 0.1);
+      color: var(--neo-cyan);
+      border-color: rgba(34, 211, 238, 0.2);
+    }
+    .btn-cyan:hover {
+      background: rgba(34, 211, 238, 0.2);
+      box-shadow: 0 0 20px var(--cyan-glow), inset 0 0 20px rgba(34, 211, 238, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .btn-rose {
+      background: rgba(251, 113, 133, 0.1);
+      color: var(--neo-rose);
+      border-color: rgba(251, 113, 133, 0.2);
+    }
+    .btn-rose:hover {
+      background: rgba(251, 113, 133, 0.2);
+      box-shadow: 0 0 20px var(--rose-glow), inset 0 0 20px rgba(251, 113, 133, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .btn:active { transform: scale(0.96) !important; }
+
+    /* ── Info Sections ── */
+    .info-section {
+      padding: 48px 40px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .info-section h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .info-section .c-indigo { color: var(--neo-indigo); }
+    .info-section .c-cyan { color: var(--neo-cyan); }
+    .info-section .c-rose { color: var(--neo-rose); }
+
+    .info-section p {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      width: 100%;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .footer-divider {
+      width: 40px; height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .footer p { font-size: 0.8rem; color: var(--text-dim); }
+    .footer b { color: var(--neo-indigo); font-weight: 600; }
+
+    .social-row { display: flex; gap: 12px; }
+
+    .social-row a {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .social-row a:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    /* ── Reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .features { grid-template-columns: repeat(2, 1fr); }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .hero h1 { font-size: 2.8rem; }
+    }
+
+    @media (max-width: 768px) {
+      .container { padding: 100px 16px 32px; gap: 36px; }
+      .features { grid-template-columns: 1fr; }
+      .hero { padding: 48px 32px; }
+      .hero h1 { font-size: 2.2rem; }
+      .info-section { padding: 36px 28px; }
+      .info-section h2 { font-size: 1.7rem; }
+      .feature-card { padding: 32px 24px; }
+    }
+
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 1.9rem; }
+      .stat-number { font-size: 1.8rem; }
+      .btn { padding: 10px 20px; font-size: 0.8rem; }
+      .top-bar { padding: 6px 14px; gap: 10px; }
+      .top-bar .brand { font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Neo Dark BG Elements -->
+  <div class="neo-grid"></div>
+  <div class="ambient-glow"></div>
+
+  <!-- Floating Top Bar -->
+  <div class="top-bar">
+    <div class="brand">
+      <div class="status-dot"></div>
+      Shitsu MD
+    </div>
+    <div class="divider-v"></div>
+    <div class="marquee-wrap">
+      <div class="marquee-track">
+        <span>⚡ Neo Dark Experience</span>
+        <span>💜 Crafted by <em>Dilsha</em></span>
+        <span>🔒 Encrypted Sessions</span>
+        <span>🚀 Instant Deploy</span>
+        <span>✨ Lovely Bot</span>
+        <span>⚡ Neo Dark Experience</span>
+        <span>💜 Crafted by <em>Dilsha</em></span>
+        <span>🔒 Encrypted Sessions</span>
+        <span>🚀 Instant Deploy</span>
+        <span>✨ Lovely Bot</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container">
+
+    <!-- Profile -->
+    <div class="profile-section">
+      <div class="avatar-container">
+        <div class="avatar-ring"></div>
+        <img src="https://shyra.edgeone.app/bot-img.jpg" alt="Shitsu MD" class="avatar-img">
+      </div>
+      <div class="profile-name">Shitsu MD</div>
+      <div class="profile-tag">By Dilsha &bull; Neo</div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero glass">
+      <h1>
+        The Future of<br>
+        <span class="gradient-text">WA Sessions</span>
+      </h1>
+      <p>A sleek, neo-glass experience. Generate your session with Dilsha's premium architecture. Fast, secure, elegant.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row reveal">
+      <div class="stat-card glass">
+        <div class="stat-number" data-target="10" data-suffix="K+">0</div>
+        <div class="stat-label">Users</div>
+      </div>
+      <div class="stat-card glass">
+        <div class="stat-number" data-target="99" data-suffix="%">0</div>
+        <div class="stat-label">Uptime</div>
+      </div>
+      <div class="stat-card glass">
+        <div class="stat-number" data-target="500" data-suffix="+">0</div>
+        <div class="stat-label">Commands</div>
+      </div>
+      <div class="stat-card glass">
+        <div class="stat-number" data-target="24" data-suffix="/7">0</div>
+        <div class="stat-label">Support</div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features">
+      <div class="feature-card glass reveal">
+        <div class="feature-icon"><i class="fas fa-qrcode"></i></div>
+        <h3>QR Pairing</h3>
+        <p>Scan and connect instantly. Advanced QR system with secure session generation and fluid pairing.</p>
+        <button onclick="window.location.href='/qr'" class="btn btn-indigo">Get QR Code</button>
+      </div>
+      <div class="feature-card glass reveal">
+        <div class="feature-icon"><i class="fas fa-key"></i></div>
+        <h3>Pair Code</h3>
+        <p>Enter your number, get an encrypted code. No camera needed — just paste and connect beautifully.</p>
+        <button onclick="window.location.href='/pair'" class="btn btn-cyan">Generate Code</button>
+      </div>
+      <div class="feature-card glass reveal">
+        <div class="feature-icon"><i class="fas fa-rocket"></i></div>
+        <h3>Deploy Bot</h3>
+        <p>One-click deployment with all premium features. Your own bot running in minutes with lovely customizations.</p>
+        <button onclick="window.location.href='https://github.com/Shitsu-MD/Shitsu_MD'" class="btn btn-rose">Deploy Now</button>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="info-section glass reveal">
+      <h2>About <span class="c-indigo">Shitsu</span></h2>
+      <p>A powerful, feature-rich WhatsApp bot crafted with love by Dilsha. Combining cutting-edge performance, elegant design, and rock-solid reliability into one lovely package.</p>
+    </div>
+
+    <!-- Contact -->
+    <div class="info-section glass reveal">
+      <h2>Lovely <span class="c-cyan">Support</span></h2>
+      <p>Our dedicated team is here for you around the clock. Whether it's deployment help or just a friendly chat — Dilsha and the crew are always ready.</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer glass reveal">
+      <div class="footer-divider"></div>
+      <p>© 2024 Shitsu MD &bull; Made by <b>Dilsha</b></p>
+      <div class="social-row">
+        <a href="https://youtube.com/@shitsumd" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+        <a href="https://www.instagram.com/shitsumd" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://t.me/shitsumd" target="_blank" title="Telegram"><i class="fab fa-telegram"></i></a>
+        <a href="https://github.com/shitsumd" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Scroll Reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Stagger features
+    document.querySelectorAll('.feature-card.reveal').forEach((card, i) => {
+      card.style.transitionDelay = `${i * 0.12}s`;
+    });
+
+    // Counter Animation
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.dataset.target);
+          const suffix = el.dataset.suffix || '';
+          let current = 0;
+          const step = Math.ceil(target / 40);
+          const timer = setInterval(() => {
+            current += step;
+            if (current >= target) { current = target; clearInterval(timer); }
+            el.textContent = current + suffix;
+          }, 30);
+          counterObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.stat-number').forEach(el => counterObserver.observe(el));
+
+    // Button Ripple Effect
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const circle = document.createElement('span');
+        const d = Math.max(this.clientWidth, this.clientHeight);
+        const r = d / 2;
+        const rect = this.getBoundingClientRect();
+        circle.style.cssText = `
+          width: ${d}px; height: ${d}px;
+          left: ${e.clientX - rect.left - r}px;
+          top: ${e.clientY - rect.top - r}px;
+          position: absolute; border-radius: 50%;
+          background: rgba(255,255,255,0.1);
+          transform: scale(0); pointer-events: none;
+          animation: ripple 0.5s ease-out forwards;
+        `;
+        this.appendChild(circle);
+        setTimeout(() => circle.remove(), 500);
+      });
+    });
+
+    const style = document.createElement('style');
+    style.textContent = `@keyframes ripple { to { transform: scale(4); opacity: 0; } }`;
+    document.head.appendChild(style);
+  </script>
+
+  <!-- GetButton.io widget -->
+  <script type="text/javascript">
+    (function () {
+      var options = {
+        sms: "+94764642432",
+        sms_color: "#129BF4",
+        whatsapp: "+94764642432",
+        call_to_action: "Lovely Support 💜",
+        button_color: "#818cf8",
+        position: "left",
+        order: "sms,whatsapp",
+        pre_filled_message: "Hey Dilsha! I need help with Shitsu MD 💜",
+      };
+      var proto = 'https:', host = "getbutton.io", url = proto + '//static.' + host;
+      var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = url + '/widget-send-button/js/init.js';
+      s.onload = function () { WhWidgetSendButton.init(host, proto, options); };
+      var x = document.getElementsByTagName('script')[0]; x.parentNode.insertBefore(s, x);
+    })();
+  </script>
+</body>
+</html>
